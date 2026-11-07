@@ -21,6 +21,19 @@ def _error(code):
 def _missing(mapping, key):
     return key not in mapping or mapping[key] is None
 
+def read_request_file(path):
+    """คืน (data, None) ถ้าอ่านได้ หรือ (None, error_response) ถ้า YAML ใช้ไม่ได้"""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+    except (yaml.YAMLError, UnicodeDecodeError, OSError):
+        return None, _error("invalid_yaml")
+
+    if not isinstance(data, dict):
+        return None, _error("invalid_yaml")
+
+    return data, None
+
 def validate_request(data):
     """
     Validate one IPA2026 desired-state request.
@@ -82,10 +95,7 @@ def process_request_file(path):
     Read a YAML request file, validate it,
     and return a response dictionary.
     """
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
-    except (yaml.YAMLError, UnicodeDecodeError, OSError):
-        return _error("invalid_yaml")
-
+    data, error = read_request_file(path)
+    if error is not None:
+        return error
     return validate_request(data)
