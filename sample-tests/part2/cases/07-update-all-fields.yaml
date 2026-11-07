@@ -1,0 +1,16 @@
+fixture: 07-update-all-fields.yaml
+
+expected:
+  status: ok
+  result: planned
+  operation: update
+  changes:
+    ipv4:
+      from: 172.29.6.1/32
+      to: 172.29.6.9/32
+    description:
+      from: STUDENT-CASE-ALL-OLD
+      to: STUDENT-CASE-ALL-NEW
+    admin_state:
+      from: up
+      to: down

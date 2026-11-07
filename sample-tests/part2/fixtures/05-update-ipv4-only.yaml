@@ -1,0 +1,11 @@
+desired:
+  name: Loopback204
+  ipv4: 172.30.204.5/32
+  description: STUDENT-CASE-IPV4
+  admin_state: up
+
+current:
+  name: Loopback204
+  ipv4: 172.30.204.1/32
+  description: STUDENT-CASE-IPV4
+  admin_state: up
