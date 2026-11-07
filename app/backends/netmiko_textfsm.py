@@ -22,23 +22,35 @@ def _connect(router):
     )
 
 
-def _records(output):
-    """TextFSM คืน list ถ้า parse ได้ ถ้าไม่ได้จะคืนข้อความดิบ"""
-    if isinstance(output, list):
-        return output
-    text = (output or "").strip()
-    if not text or "%" in text or "invalid" in text.lower():
+def _parse_cli(command, raw_output):
+    """
+    - ข้อความ error ของ IOS (บรรทัดที่ขึ้นต้นด้วย %) แปลว่าไม่มี interface นี้ -> []
+      ต้องเช็กก่อนส่งให้ TextFSM เพราะ template จะ raise error กับบรรทัดที่ไม่รู้จัก
+    """
+    text = (raw_output or "").strip()
+    if not text or any(
+        line.lstrip().startswith("%") for line in text.splitlines()
+    ):
         return []
-    raise RuntimeError("TextFSM could not parse the command output")
+
+    from ntc_templates.parse import parse_output
+
+    try:
+        return parse_output(platform="cisco_ios", command=command, data=text)
+    except Exception as exc:
+        raise RuntimeError(
+            f"TextFSM could not parse {command!r}: {text[:300]!r}"
+        ) from exc
 
 
 def _real_netmiko_get(router, interface_name):
+    ip_command = f"show ip interface {interface_name}"
+    description_command = "show interfaces description"
+
     with _connect(router) as conn:
-        ip_info = _records(
-            conn.send_command(f"show ip interface {interface_name}", use_textfsm=True)
-        )
-        descriptions = _records(
-            conn.send_command("show interfaces description", use_textfsm=True)
+        ip_info = _parse_cli(ip_command, conn.send_command(ip_command))
+        descriptions = _parse_cli(
+            description_command, conn.send_command(description_command)
         )
     return ip_info, descriptions
 

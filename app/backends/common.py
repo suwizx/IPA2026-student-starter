@@ -1,5 +1,6 @@
 """Helpers shared by the Part 3 backends."""
 
+import logging
 import os
 import re
 import socket
@@ -62,8 +63,12 @@ CONNECTION_ERRORS = _types(
 )
 
 
+log = logging.getLogger(__name__)
+
+
 def classify_exception(exc):
     """แปลง exception เป็น error response"""
+    log.warning("backend operation failed", exc_info=exc)
     if isinstance(exc, AUTH_ERRORS):
         return error("authentication_failed")
     if isinstance(exc, CONNECTION_ERRORS):
